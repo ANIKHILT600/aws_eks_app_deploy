@@ -46,7 +46,8 @@ The EKS cluster is created using the eksctl utility, which automates the provisi
 eksctl create cluster --name demo-cluster --region us-east-1 --fargate
 ```
 **Process**: This command initiates the creation of a managed EKS control plane and configures Fargate as the serverless compute engine for worker nodes. This process can take 10-20 minutes.
-**Verification**: Once completed, the cluster can be seen in the AWS EKS console, showing details like Kubernetes version and API server endpoint. The console also provides a "Resources" tab to view cluster components like pods, daemon sets, and service accounts
+
+**Verification**: Once completed, the cluster can be seen in the AWS EKS console, showing details like Kubernetes version and API server endpoint. The console also provides a "Resources" tab to view cluster components like pods, daemon sets, and service accounts.
 
 # Delete the cluster
 eksctl delete cluster --name demo-cluster --region us-east-1
@@ -55,16 +56,17 @@ eksctl delete cluster --name demo-cluster --region us-east-1
 # 3. kubeconfig Update
 To interact with the newly created EKS cluster using kubectl from your local machine, the kubeconfig file needs to be updated:
 ```
-aws eks update-kubeconfig --name demo-cluster-one --region us-east-1
+aws eks update-kubeconfig --name demo-cluster --region us-east-1
 ```
 **Purpose**: This command configures kubectl to connect to your EKS cluster, allowing you to manage Kubernetes resources directly from your terminal.
 
 # 4. Fargate Profile Creation for Application Namespace
 By default, Fargate profiles are set for default and kube-system namespaces. To deploy applications in a custom namespace using Fargate, a new Fargate profile is required:
 ```
-eksctl create fargateprofile --cluster demo-cluster-one --name ALB-sample-app --namespace game2048
+eksctl create fargateprofile --cluster demo-cluster --name ALB-sample-app --namespace game2048
 ```
 **Purpose**: This ensures that pods deployed within the specified `` (e.g., game2048) are scheduled on Fargate, leveraging its serverless capabilities.
+
 **Verification**: The new Fargate profile appears in the "Compute" section of the EKS cluster overview in the AWS console.
 
 # 5. Application Deployment (2048 Game)
