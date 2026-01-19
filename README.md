@@ -7,7 +7,7 @@ Before starting the EKS cluster creation, several command-line tools must be ins
 **Installing the AWS CLI:**
 Download and install the AWS CLI on your local machine. You can find installation instructions for various operating systems [here](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html).
 
-**Configuring AWS CLI Credentials:**
+*Configuring AWS CLI Credentials:*
 Access Keys (for Programmatic Access):
 - If you selected "Programmatic access" during user creation, you will receive access keys (Access Key ID and Secret Access Key).
 - Store these access keys securely, as they will be used to authenticate API requests made to AWS services.
