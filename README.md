@@ -41,7 +41,7 @@ If you were to use "eksctl create cluster --name demo-cluster --region us-east-1
 
 
 # 2. Create cluster using Fargate
-The EKS cluster is created using the eksctl utility, which automates the provisioning of necessary AWS resources, including VPCs, public/private subnets, and IAM roles:
+The EKS cluster is created using the eksctl utility, which automates the provisioning of necessary AWS resources, including VPCs, public/private subnets, IAM roles and the EKS control plane:
 ```
 eksctl create cluster --name demo-cluster --region us-east-1 --fargate
 ```
@@ -62,23 +62,62 @@ aws eks update-kubeconfig --name demo-cluster --region us-east-1
 **Purpose**: This command configures kubectl to connect to your EKS cluster, allowing you to manage Kubernetes resources directly from your terminal.
 
 # 4. Fargate Profile Creation for Application Namespace
-By default, Fargate profiles are set for default and kube-system namespaces. To deploy applications in a custom namespace using Fargate, a new Fargate profile is required:
+By default, Fargate profiles are set for default and kube-system namespaces. You can use default profile. But if you want to deploy applications in a custom namespace (like example: game2048) using Fargate, a new Fargate profile (like example: alb-sample-app) is required:
 ```
-eksctl create fargateprofile --cluster demo-cluster --name ALB-sample-app --namespace game2048
+eksctl create fargateprofile --cluster demo-cluster --name alb-sample-app --namespace game2048
 ```
-**Purpose**: This ensures that pods deployed within the specified `` (e.g., game2048) are scheduled on Fargate, leveraging its serverless capabilities.
+
+**Purpose**: This ensures that pods deployed within the specified namespace (e.g., game2048) are scheduled on Fargate, leveraging its serverless capabilities.
 
 **Verification**: The new Fargate profile appears in the "Compute" section of the EKS cluster overview in the AWS console.
 
-# 5. Application Deployment (2048 Game)
+# 5. Deploy 2048 Game Application, Service, and Ingress
 The 2048 game application is deployed using a single YAML file that encompasses the namespace, deployment, service, and Ingress resources:
+```
+kubectl apply -f [https://raw.githubusercontent.com/iam-veeramalla/aws-devops-zero-to-hero/main/day-22/2048-app-deploy-ingress.yaml](https://raw.githubusercontent.com/iam-veeramalla/aws-devops-zero-to-hero/main/day-22/2048-app-deploy-ingress.yaml`)
+```
+**YAML File Breakdown**:
+- Namespace (game2048): Created first to logically separate application resources.
+- Deployment: Defines the 2048 game application with a specified container image and replica count (e.g., 5 replicas).
+- Service: Exposes the pods internally within the cluster. It uses selectors to match pods based on labels (e.g., app.kubernetes.io/name: app2048).
+- Ingress: Defines how external HTTP/HTTPS traffic is routed to the service.
+- Annotations: Include specific configurations for the AWS ALB Ingress Controller (e.g., kubernetes.io/ingress.class: alb, alb.ingress.kubernetes.io/scheme: internet-facing).
+- Rules: Specify that traffic for the default path (/) should be forwarded to the game2048-svc service on port 80.
 
-Command: kubectl apply -f [https://raw.githubusercontent.com/iam-veeramalla/aws-devops-zero-to-hero/main/day-22/2048-app-deploy-ingress.yaml](https://raw.githubusercontent.com/iam-veeramalla/aws-devops-zero-to-hero/main/day-22/2048-app-deploy-ingress.yaml`) (44:48)
-YAML File Breakdown (45:09):
-Namespace (game2048): Created first to logically separate application resources.
-Deployment: Defines the 2048 game application with a specified container image and replica count (e.g., 5 replicas) (45:28).
-Service: Exposes the pods internally within the cluster. It uses selectors to match pods based on labels (e.g., app.kubernetes.io/name: app2048) (46:06).
-Ingress: Defines how external HTTP/HTTPS traffic is routed to the service.
-Annotations: Include specific configurations for the AWS ALB Ingress Controller (e.g., kubernetes.io/ingress.class: alb, alb.ingress.kubernetes.io/scheme: internet-facing) (47:04).
-Rules: Specify that traffic for the default path (/) should be forwarded to the game2048-svc service on port 80 (47:18).
-Ingress Controller Role: The alb.ingress.kubernetes.io annotations instruct the ALB Ingress Controller (which would need to be deployed and configured on the cluster, though its deployment is not explicitly shown in this demo segment) to watch for this Ingress resource and provision an AWS Application Load Balancer accordingly. This ALB then routes external requests to the game2048-svc service, and subsequently to the 2048 application pods (47:25).
+**Check deployment**
+1. To check the pods
+```
+kubectl get pods -n game-2048
+```
+2. To check the service
+```
+kubectl get svc -n game-2048
+```
+3. To check the ingress
+```
+kubectl get ingress -n game-2048
+```
+
+**Understanding Ingress and Ingress-controller**:
+**Ingress**
+*What it is*: Ingress is a Kubernetes resource.
+Purpose: Its primary purpose is to allow external customers or users to access applications deployed inside the Kubernetes cluster (19:01-19:08). It essentially routes traffic from outside to services within the cluster.
+*How it works*:
+A DevOps engineer writes an ingress.yaml file.
+This file specifies rules for routing. For example, it defines that if a user accesses a specific domain and path (e.g., example.com/ABC), the request should be forwarded to a particular Kubernetes service.
+The service then directs the traffic to the appropriate pod where the application is running.
+*Benefit over LoadBalancer Service*: While the LoadBalancer service type can also expose applications publicly, it becomes very costly if you have many applications, as each would require its own load balancer. Ingress provides a more cost-effective solution by allowing a single load balancer (managed by the Ingress Controller) to handle routing for multiple applications.
+
+**Ingress Controller**:
+*What it is*: The Ingress Controller is a component within Kubernetes that is responsible for fulfilling the Ingress rules. It's essentially the actual "traffic cop" that implements the routing defined in the Ingress resources.
+*How it works*:
+Ingress Controllers are typically supported by various load balancers and platforms, such as Nginx, F5, or in the video's context, AWS ALB (Application Load Balancer).
+They can be deployed into the Kubernetes cluster using Helm charts or plain YAML manifests.
+The Ingress Controller continuously watches for Ingress resources that are created in the cluster.
+When an Ingress Controller finds an Ingress resource (specifically, one that matches its ingressClassName, like alb for the ALB Ingress Controller), it takes action.
+It then configures this load balancer with the rules specified in the Ingress resource, ensuring that external user requests are correctly routed to the application services and pods within the cluster.
+
+**In summary**, the Ingress resource defines how external traffic should be routed, and the Ingress Controller is the active component that makes that routing happen by provisioning and configuring the necessary load balancers and networking infrastructure 
+
+
+
