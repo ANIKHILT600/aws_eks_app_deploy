@@ -1,4 +1,4 @@
-# aws_eks_app_deploy
+# AWS-EKS-APP-DEPLOY
 Setting up an AWS EKS cluster and deploying a sample 2048 game application, making it accessible via an Application Load Balancer (ALB) through Kubernetes Ingress.
 
 # 1. Prerequisites and Tools Setup
