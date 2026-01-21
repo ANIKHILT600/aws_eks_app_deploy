@@ -200,15 +200,15 @@ kubectl get deployment -n kube-system aws-load-balancer-controller
 ```
 
 # What happens after the Ingress controller is configured and deployed:
-Ingress Resource Created: You define Ingress rules (hostnames, paths, backend services) in a YAML file and apply it to Kubernetes.
+- *Ingress Resource Created*: You define Ingress rules (hostnames, paths, backend services) in a YAML file and apply it to Kubernetes.
 
-ALB Ingress Controller Detects: The deployed ALB Ingress Controller watches for this new Ingress resource .
+- *ALB Ingress Controller Detects*: The deployed ALB Ingress Controller watches for this new Ingress resource .
 
-AWS ALB Provisioned: The controller automatically provisions an AWS Application Load Balancer (ALB) based on your Ingress rules and annotations.
+- *AWS ALB Provisioned*: The controller automatically provisions an AWS Application Load Balancer (ALB) based on your Ingress rules and annotations.
 
-Ingress ADDRESS Updated: The Kubernetes Ingress resource's ADDRESS field is then populated with the DNS name of this newly created ALB.
+- *Ingress ADDRESS Updated*: The Kubernetes Ingress resource's ADDRESS field is then populated with the DNS name of this newly created ALB.
 
-Traffic Routing: External traffic flows to the ALB's DNS name, which then routes it to your application pods within the EKS cluster 
+- *Traffic Routing*: External traffic flows to the ALB's DNS name, which then routes it to your application pods within the EKS cluster 
 
 
 **You can either get the ALB dns from kubctl get ingress -n game-2048 or go to AWS console --> ec2 --> load balancer, and try it on browser.**
@@ -234,25 +234,22 @@ kubectl logs -f -n kube-system
 
 kubectl get svc -n game-2048
 
-Examine the Ingress Resource
+4. Examine the Ingress Resource: Get detailed information about your specific Ingress resource. Replace `` with the name of your Ingress.
 
-Describe Ingress: Get detailed information about your specific Ingress resource. Replace `` with the name of your Ingress.
-bash
 kubectl describe ingress  -n game-2048
 
-Pay close attention to the Events section at the bottom, which often shows errors or warnings from the Ingress controller about why it couldn't process the Ingress. Also, verify the Rules and Annotations are correctly configured.
+5. List all Ingresses: This helps you see if your Ingress was created successfully and its current status.
 
-List all Ingresses:
-bash
 kubectl get ingress --all-namespaces
 
-This helps you see if your Ingress was created successfully and its current status.
+6. Check Service Definition: Verify the Kubernetes Service that your Ingress rule points to. Replace and.
 
-Inspect Backend Services and Endpoints
+kubectl describe svc  -n game-2048
 
-Check Service Definition: Verify the Kubernetes Service that your Ingress rule points to. Replace and.
-bash
-kubectl describe svc  -n
+7. Edit deployment and check if any error
+   
+kubectl edit deployment -n kube-system aws-load-balancer-controller
+
 
 
 
