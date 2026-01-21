@@ -72,9 +72,9 @@ eksctl create fargateprofile --cluster demo-cluster --name alb-sample-app --name
 **Verification**: The new Fargate profile appears in the "Compute" section of the EKS cluster overview in the AWS console.
 
 # 5. Deploy 2048 Game Application, Service, and Ingress
-The 2048 game application is deployed using a single YAML file that encompasses the namespace, deployment, service, and Ingress resources:
+The 2048 game application is deployed using a single YAML file that encompasses the namespace, deployment, service, and Ingress resources. Refering from [kubernetes-sigs](https://github.com/kubernetes-sigs/aws-load-balancer-controller/blob/main/docs/examples/2048/2048_full.yaml):
 ```
-kubectl apply -f [https://raw.githubusercontent.com/iam-veeramalla/aws-devops-zero-to-hero/main/day-22/2048-app-deploy-ingress.yaml](https://raw.githubusercontent.com/iam-veeramalla/aws-devops-zero-to-hero/main/day-22/2048-app-deploy-ingress.yaml`)
+kubectl apply -f https://raw.githubusercontent.com/ANIKHILT600/aws_eks_app_deploy/refs/heads/main/2048-app.yaml
 ```
 **YAML File Breakdown**:
 - Namespace (game2048): Created first to logically separate application resources.
@@ -107,13 +107,11 @@ kubectl get ingress -n game-2048
 Purpose: Its primary purpose is to allow external customers or users to access applications deployed inside the Kubernetes cluster (19:01-19:08). It essentially routes traffic from outside to services within the cluster.
 
 *How it works*:
-
 A DevOps engineer writes an ingress.yaml file.
 This file specifies rules for routing. For example, it defines that if a user accesses a specific domain and path (e.g., example.com/ABC), the request should be forwarded to a particular Kubernetes service.
 The service then directs the traffic to the appropriate pod where the application is running.
 
 *Benefit over LoadBalancer Service*: 
-
 While the LoadBalancer service type can also expose applications publicly, it becomes very costly if you have many applications, as each would require its own load balancer. Ingress provides a more cost-effective solution by allowing a single load balancer (managed by the Ingress Controller) to handle routing for multiple applications.
 
 **Ingress Controller**:
@@ -121,7 +119,6 @@ While the LoadBalancer service type can also expose applications publicly, it be
 *What it is*: The Ingress Controller is a component within Kubernetes that is responsible for fulfilling the Ingress rules. It's essentially the actual "traffic cop" that implements the routing defined in the Ingress resources.
 
 *How it works*:
-
 Ingress Controllers are typically supported by various load balancers and platforms, such as Nginx, F5, or in the video's context, AWS ALB (Application Load Balancer).
 They can be deployed into the Kubernetes cluster using Helm charts or plain YAML manifests.
 The Ingress Controller continuously watches for Ingress resources that are created in the cluster.
@@ -129,6 +126,133 @@ When an Ingress Controller finds an Ingress resource (specifically, one that mat
 It then configures this load balancer with the rules specified in the Ingress resource, ensuring that external user requests are correctly routed to the application services and pods within the cluster.
 
 **In summary**, the Ingress resource defines how external traffic should be routed, and the Ingress Controller is the active component that makes that routing happen by provisioning and configuring the necessary load balancers and networking infrastructure 
+
+# 6. Setting up Ingress-Controller
+
+**Why IAM OIDC Integration is Needed for EKS Clusters**:
+*Problem*: Kubernetes applications (pods) running within your EKS cluster often need to interact with other AWS services, such as S3 buckets, EKS control plane, CloudWatch or any other AWS service.
+*The Challenge (without IAM OIDC)*: How do you grant these Kubernetes pods the necessary permissions to securely access AWS services? Traditionally, AWS resources (like EC2 instances) use IAM roles to get permissions. Simply embedding AWS credentials directly into pods is insecure and unmanageable.
+
+*The Solution: IAM Roles for Service Accounts (IRSA) via OIDC*:
+IAM OIDC integration allows your EKS cluster to act as an identity provider for AWS IAM. This setup enables you to attach specific IAM roles directly to Kubernetes Service Accounts within your cluster. When a pod runs and uses a service account with an attached IAM role, the pod can assume that IAM role and inherit its permissions to access AWS services.
+
+*Benefit*: This provides a secure and granular way for your Kubernetes applications to authenticate and authorize themselves with AWS services, without hardcoding credentials or using less secure methods.
+
+**Configure IAM OIDC provider**:
+Commands to configure IAM OIDC provider is
+```
+eksctl utils associate-iam-oidc-provider --cluster demo-cluster --approve
+```
+
+**Download IAM policy**
+```
+curl -O https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/v2.11.0/docs/install/iam_policy.json
+```
+
+**Create IAM Policy**
+```
+aws iam create-policy \
+    --policy-name AWSLoadBalancerControllerIAMPolicy \
+    --policy-document file://iam_policy.json
+```
+
+**Create IAM Role**
+```
+eksctl create iamserviceaccount \
+  --cluster=<your-cluster-name> \
+  --namespace=kube-system \
+  --name=aws-load-balancer-controller \
+  --role-name AmazonEKSLoadBalancerControllerRole \
+  --attach-policy-arn=arn:aws:iam::<your-aws-account-id>:policy/AWSLoadBalancerControllerIAMPolicy \
+  --approve
+```
+
+**Deploy Ingress-Controller (alb)**
+
+*Add helm repo*:
+Helm is used to streamline the deployment of the ALB Ingress Controller, ensuring it's set up correctly to manage incoming traffic for the 2048 game application.
+```
+helm repo add eks https://aws.github.io/eks-charts
+```
+
+*Update the repo*:
+```
+helm repo update eks
+```
+
+*Install helm*:
+```
+helm install aws-load-balancer-controller eks/aws-load-balancer-controller -n kube-system \
+  --set clusterName=<your-cluster-name> \
+  --set serviceAccount.create=false \
+  --set serviceAccount.name=aws-load-balancer-controller \
+  --set region=<your-region> \
+  --set vpcId=<your-vpc-id>
+```
+Note: Make sure to replace clusterName, clusterName & vpcId.
+
+*Verify that the deployments are running*:
+```
+kubectl get deployment -n kube-system aws-load-balancer-controller
+```
+
+# What happens after the Ingress controller is configured and deployed:
+Ingress Resource Created: You define Ingress rules (hostnames, paths, backend services) in a YAML file and apply it to Kubernetes.
+
+ALB Ingress Controller Detects: The deployed ALB Ingress Controller watches for this new Ingress resource .
+
+AWS ALB Provisioned: The controller automatically provisions an AWS Application Load Balancer (ALB) based on your Ingress rules and annotations.
+
+Ingress ADDRESS Updated: The Kubernetes Ingress resource's ADDRESS field is then populated with the DNS name of this newly created ALB.
+
+Traffic Routing: External traffic flows to the ALB's DNS name, which then routes it to your application pods within the EKS cluster 
+
+
+**You can either get the ALB dns from kubctl get ingress -n game-2048 or go to AWS console --> ec2 --> load balancer, and try it on browser.**
+
+
+
+# Troubleshooting if facing issue while deploying ingress-controller
+Here are the commands corresponding to the troubleshooting steps:
+
+1. Check Pod Status: To see if your Ingress controller pods are running, replace `` with the namespace where your Ingress controller is deployed (commonly kube-system or ingress-nginx).
+
+kubectl get pods -n kube-system
+
+2. Check Pod Logs: If a pod is not running or you suspect an issue, check its logs. Replace `` with the exact name of one of your Ingress controller pods.
+
+kubectl logs -n kube-system
+
+You can also add -f to follow the logs in real-time.
+
+kubectl logs -f -n kube-system
+
+3. Check Controller Service: To inspect the Service associated with your Ingress controller and find its external IP or hostname.
+
+kubectl get svc -n game-2048
+
+Examine the Ingress Resource
+
+Describe Ingress: Get detailed information about your specific Ingress resource. Replace `` with the name of your Ingress.
+bash
+kubectl describe ingress  -n game-2048
+
+Pay close attention to the Events section at the bottom, which often shows errors or warnings from the Ingress controller about why it couldn't process the Ingress. Also, verify the Rules and Annotations are correctly configured.
+
+List all Ingresses:
+bash
+kubectl get ingress --all-namespaces
+
+This helps you see if your Ingress was created successfully and its current status.
+
+Inspect Backend Services and Endpoints
+
+Check Service Definition: Verify the Kubernetes Service that your Ingress rule points to. Replace and.
+bash
+kubectl describe svc  -n
+
+
+
 
 
 
