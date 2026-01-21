@@ -171,6 +171,7 @@ eksctl create iamserviceaccount \
 **Deploy Ingress-Controller (alb)**
 
 *Add helm repo*:
+
 Helm is used to streamline the deployment of the ALB Ingress Controller, ensuring it's set up correctly to manage incoming traffic for the 2048 game application.
 ```
 helm repo add eks https://aws.github.io/eks-charts
@@ -190,7 +191,8 @@ helm install aws-load-balancer-controller eks/aws-load-balancer-controller -n ku
   --set region=<your-region> \
   --set vpcId=<your-vpc-id>
 ```
-Note: Make sure to replace clusterName, clusterName & vpcId.
+Note: Make sure to replace clusterName, region & vpcId.
+
 
 *Verify that the deployments are running*:
 ```
