@@ -49,9 +49,10 @@ eksctl create cluster --name demo-cluster --region us-east-1 --fargate
 
 **Verification**: Once completed, the cluster can be seen in the AWS EKS console, showing details like Kubernetes version and API server endpoint. The console also provides a "Resources" tab to view cluster components like pods, daemon sets, and service accounts.
 
-# Delete the cluster
+**Delete the cluster**
+```
 eksctl delete cluster --name demo-cluster --region us-east-1
-
+```
 
 # 3. kubeconfig Update
 To interact with the newly created EKS cluster using kubectl from your local machine, the kubeconfig file needs to be updated:
