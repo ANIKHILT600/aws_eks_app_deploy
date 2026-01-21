@@ -99,18 +99,29 @@ kubectl get ingress -n game-2048
 ```
 
 **Understanding Ingress and Ingress-controller**:
+
 **Ingress**
+
 *What it is*: Ingress is a Kubernetes resource.
+
 Purpose: Its primary purpose is to allow external customers or users to access applications deployed inside the Kubernetes cluster (19:01-19:08). It essentially routes traffic from outside to services within the cluster.
+
 *How it works*:
+
 A DevOps engineer writes an ingress.yaml file.
 This file specifies rules for routing. For example, it defines that if a user accesses a specific domain and path (e.g., example.com/ABC), the request should be forwarded to a particular Kubernetes service.
 The service then directs the traffic to the appropriate pod where the application is running.
-*Benefit over LoadBalancer Service*: While the LoadBalancer service type can also expose applications publicly, it becomes very costly if you have many applications, as each would require its own load balancer. Ingress provides a more cost-effective solution by allowing a single load balancer (managed by the Ingress Controller) to handle routing for multiple applications.
+
+*Benefit over LoadBalancer Service*: 
+
+While the LoadBalancer service type can also expose applications publicly, it becomes very costly if you have many applications, as each would require its own load balancer. Ingress provides a more cost-effective solution by allowing a single load balancer (managed by the Ingress Controller) to handle routing for multiple applications.
 
 **Ingress Controller**:
+
 *What it is*: The Ingress Controller is a component within Kubernetes that is responsible for fulfilling the Ingress rules. It's essentially the actual "traffic cop" that implements the routing defined in the Ingress resources.
+
 *How it works*:
+
 Ingress Controllers are typically supported by various load balancers and platforms, such as Nginx, F5, or in the video's context, AWS ALB (Application Load Balancer).
 They can be deployed into the Kubernetes cluster using Helm charts or plain YAML manifests.
 The Ingress Controller continuously watches for Ingress resources that are created in the cluster.
