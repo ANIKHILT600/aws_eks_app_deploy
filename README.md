@@ -130,6 +130,7 @@ It then configures this load balancer with the rules specified in the Ingress re
 # 6. Setting up Ingress-Controller
 
 **Why IAM OIDC Integration is Needed for EKS Clusters**:
+
 *Problem*: Kubernetes applications (pods) running within your EKS cluster often need to interact with other AWS services, such as S3 buckets, EKS control plane, CloudWatch or any other AWS service.
 *The Challenge (without IAM OIDC)*: How do you grant these Kubernetes pods the necessary permissions to securely access AWS services? Traditionally, AWS resources (like EC2 instances) use IAM roles to get permissions. Simply embedding AWS credentials directly into pods is insecure and unmanageable.
 
