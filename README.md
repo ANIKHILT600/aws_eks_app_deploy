@@ -160,9 +160,7 @@ Invoke-WebRequest -Uri https://raw.githubusercontent.com/kubernetes-sigs/aws-loa
 
 **Create IAM Policy**
 ```
-aws iam create-policy \
-    --policy-name AWSLoadBalancerControllerIAMPolicy \
-    --policy-document file://iam_policy.json
+aws iam create-policy --policy-name AWSLoadBalancerControllerIAMPolicy --policy-document file://iam_policy.json
 ```
 
 **Create IAM Role**
@@ -175,6 +173,7 @@ eksctl create iamserviceaccount \
   --attach-policy-arn=arn:aws:iam::<your-aws-account-id>:policy/AWSLoadBalancerControllerIAMPolicy \
   --approve
 ```
+Note: Make sure to replace clusterName & your-aws-account-id.
 
 **Deploy Ingress-Controller (alb)**
 
