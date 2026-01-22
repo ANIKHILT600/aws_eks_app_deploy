@@ -45,14 +45,13 @@ The EKS cluster is created using the eksctl utility, which automates the provisi
 ```
 eksctl create cluster --name demo-cluster --region us-east-1 --fargate
 ```
+```
+eksctl get cluster
+```
 **Process**: This command initiates the creation of a managed EKS control plane and configures Fargate as the serverless compute engine for worker nodes. This process can take 10-20 minutes.
 
 **Verification**: Once completed, the cluster can be seen in the AWS EKS console, showing details like Kubernetes version and API server endpoint. The console also provides a "Resources" tab to view cluster components like pods, daemon sets, and service accounts.
 
-**Delete the cluster**
-```
-eksctl delete cluster --name demo-cluster --region us-east-1
-```
 
 # 3. kubeconfig Update
 To interact with the newly created EKS cluster using kubectl from your local machine, the kubeconfig file needs to be updated:
@@ -213,6 +212,11 @@ kubectl get deployment -n kube-system aws-load-balancer-controller
 
 **You can either get the ALB dns from kubctl get ingress -n game-2048 or go to AWS console --> ec2 --> load balancer, and try it on browser.**
 
+
+**Delete the cluster**
+```
+eksctl delete cluster --name demo-cluster --region us-east-1
+```
 
 
 # Troubleshooting if facing issue while deploying ingress-controller
