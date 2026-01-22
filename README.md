@@ -60,6 +60,11 @@ aws eks update-kubeconfig --name demo-cluster --region us-east-1
 ```
 **Purpose**: This command configures kubectl to connect to your EKS cluster, allowing you to manage Kubernetes resources directly from your terminal.
 
+Note: You can set AWS CLI region as:
+```
+aws configure set region us-east-1
+```
+
 # 4. Fargate Profile Creation for Application Namespace
 By default, Fargate profiles are set for default and kube-system namespaces. You can use default profile. But if you want to deploy applications in a custom namespace (like example: game2048) using Fargate, a new Fargate profile (like example: alb-sample-app) is required:
 ```
