@@ -175,11 +175,28 @@ eksctl create iamserviceaccount \
 ```
 Note: Make sure to replace clusterName & your-aws-account-id.
 
+Optional command for PowerShell: (Replace each \ at the end of lines with a backtick `)
+```
+eksctl create iamserviceaccount `
+  --cluster=demo-cluster `
+  --namespace=kube-system `
+  --name=aws-load-balancer-controller `
+  --role-name AmazonEKSLoadBalancerControllerRole `
+  --attach-policy-arn=arn:aws:iam::748787803760:policy/AWSLoadBalancerControllerIAMPolicy `
+  --approve
+```
+
 **Deploy Ingress-Controller (alb)**
+
+You can install Helm in powershell as below:
+```
+winget install Helm.Helm
+```
 
 *Add helm repo*:
 
 Helm is used to streamline the deployment of the ALB Ingress Controller, ensuring it's set up correctly to manage incoming traffic for the 2048 game application.
+
 ```
 helm repo add eks https://aws.github.io/eks-charts
 ```
