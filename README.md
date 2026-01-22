@@ -217,6 +217,15 @@ helm install aws-load-balancer-controller eks/aws-load-balancer-controller -n ku
 ```
 Note: Make sure to replace clusterName, region & vpcId.
 
+Optional command for PowerShell: (Replace each \ at the end of lines with a backtick `)
+```
+helm install aws-load-balancer-controller eks/aws-load-balancer-controller -n kube-system `
+  --set clusterName=demo-cluster `
+  --set serviceAccount.create=false `
+  --set serviceAccount.name=aws-load-balancer-controller `
+  --set region=us-east-1 `
+  --set vpcId=vpc-083525fa9055cea8d
+  ```
 
 *Verify that the deployments are running*:
 ```
