@@ -45,14 +45,13 @@ The EKS cluster is created using the eksctl utility, which automates the provisi
 ```
 eksctl create cluster --name demo-cluster --region us-east-1 --fargate
 ```
+```
+eksctl get cluster --region us-east-1
+```
 **Process**: This command initiates the creation of a managed EKS control plane and configures Fargate as the serverless compute engine for worker nodes. This process can take 10-20 minutes.
 
 **Verification**: Once completed, the cluster can be seen in the AWS EKS console, showing details like Kubernetes version and API server endpoint. The console also provides a "Resources" tab to view cluster components like pods, daemon sets, and service accounts.
 
-**Delete the cluster**
-```
-eksctl delete cluster --name demo-cluster --region us-east-1
-```
 
 # 3. kubeconfig Update
 To interact with the newly created EKS cluster using kubectl from your local machine, the kubeconfig file needs to be updated:
@@ -61,10 +60,15 @@ aws eks update-kubeconfig --name demo-cluster --region us-east-1
 ```
 **Purpose**: This command configures kubectl to connect to your EKS cluster, allowing you to manage Kubernetes resources directly from your terminal.
 
+Note: You can set AWS CLI region as:
+```
+aws configure set region us-east-1
+```
+
 # 4. Fargate Profile Creation for Application Namespace
 By default, Fargate profiles are set for default and kube-system namespaces. You can use default profile. But if you want to deploy applications in a custom namespace (like example: game2048) using Fargate, a new Fargate profile (like example: alb-sample-app) is required:
 ```
-eksctl create fargateprofile --cluster demo-cluster --name alb-sample-app --namespace game2048
+eksctl create fargateprofile --cluster demo-cluster --name alb-sample-app --namespace game-2048
 ```
 
 **Purpose**: This ensures that pods deployed within the specified namespace (e.g., game2048) are scheduled on Fargate, leveraging its serverless capabilities.
@@ -149,12 +153,14 @@ eksctl utils associate-iam-oidc-provider --cluster demo-cluster --approve
 ```
 curl -O https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/v2.11.0/docs/install/iam_policy.json
 ```
+Note: If above command fails due to curl, use below power shell commad:
+```
+Invoke-WebRequest -Uri https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/v2.11.0/docs/install/iam_policy.json -OutFile iam_policy.json
+```
 
 **Create IAM Policy**
 ```
-aws iam create-policy \
-    --policy-name AWSLoadBalancerControllerIAMPolicy \
-    --policy-document file://iam_policy.json
+aws iam create-policy --policy-name AWSLoadBalancerControllerIAMPolicy --policy-document file://iam_policy.json
 ```
 
 **Create IAM Role**
@@ -167,12 +173,30 @@ eksctl create iamserviceaccount \
   --attach-policy-arn=arn:aws:iam::<your-aws-account-id>:policy/AWSLoadBalancerControllerIAMPolicy \
   --approve
 ```
+Note: Make sure to replace clusterName & your-aws-account-id.
+
+Optional command for PowerShell: (Replace each \ at the end of lines with a backtick `)
+```
+eksctl create iamserviceaccount `
+  --cluster=demo-cluster `
+  --namespace=kube-system `
+  --name=aws-load-balancer-controller `
+  --role-name AmazonEKSLoadBalancerControllerRole `
+  --attach-policy-arn=arn:aws:iam::748787803760:policy/AWSLoadBalancerControllerIAMPolicy `
+  --approve
+```
 
 **Deploy Ingress-Controller (alb)**
+
+You can install Helm in powershell as below:
+```
+winget install Helm.Helm
+```
 
 *Add helm repo*:
 
 Helm is used to streamline the deployment of the ALB Ingress Controller, ensuring it's set up correctly to manage incoming traffic for the 2048 game application.
+
 ```
 helm repo add eks https://aws.github.io/eks-charts
 ```
@@ -193,6 +217,15 @@ helm install aws-load-balancer-controller eks/aws-load-balancer-controller -n ku
 ```
 Note: Make sure to replace clusterName, region & vpcId.
 
+Optional command for PowerShell: (Replace each \ at the end of lines with a backtick `)
+```
+helm install aws-load-balancer-controller eks/aws-load-balancer-controller -n kube-system `
+  --set clusterName=demo-cluster `
+  --set serviceAccount.create=false `
+  --set serviceAccount.name=aws-load-balancer-controller `
+  --set region=us-east-1 `
+  --set vpcId=vpc-083525fa9055cea8d
+  ```
 
 *Verify that the deployments are running*:
 ```
@@ -213,6 +246,11 @@ kubectl get deployment -n kube-system aws-load-balancer-controller
 
 **You can either get the ALB dns from kubctl get ingress -n game-2048 or go to AWS console --> ec2 --> load balancer, and try it on browser.**
 
+
+**Delete the cluster**
+```
+eksctl delete cluster --name demo-cluster --region us-east-1
+```
 
 
 # Troubleshooting if facing issue while deploying ingress-controller
@@ -249,7 +287,6 @@ kubectl describe svc  -n game-2048
 7. Edit deployment and check if any error
    
 kubectl edit deployment -n kube-system aws-load-balancer-controller
-
 
 
 
