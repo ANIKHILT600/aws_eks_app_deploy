@@ -46,7 +46,7 @@ The EKS cluster is created using the eksctl utility, which automates the provisi
 eksctl create cluster --name demo-cluster --region us-east-1 --fargate
 ```
 ```
-eksctl get cluster
+eksctl get cluster --region us-east-1
 ```
 **Process**: This command initiates the creation of a managed EKS control plane and configures Fargate as the serverless compute engine for worker nodes. This process can take 10-20 minutes.
 
