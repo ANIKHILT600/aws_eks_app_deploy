@@ -68,7 +68,7 @@ aws configure set region us-east-1
 # 4. Fargate Profile Creation for Application Namespace
 By default, Fargate profiles are set for default and kube-system namespaces. You can use default profile. But if you want to deploy applications in a custom namespace (like example: game2048) using Fargate, a new Fargate profile (like example: alb-sample-app) is required:
 ```
-eksctl create fargateprofile --cluster demo-cluster --name alb-sample-app --namespace game2048
+eksctl create fargateprofile --cluster demo-cluster --name alb-sample-app --namespace game-2048
 ```
 
 **Purpose**: This ensures that pods deployed within the specified namespace (e.g., game2048) are scheduled on Fargate, leveraging its serverless capabilities.
