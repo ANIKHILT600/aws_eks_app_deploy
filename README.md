@@ -153,6 +153,10 @@ eksctl utils associate-iam-oidc-provider --cluster demo-cluster --approve
 ```
 curl -O https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/v2.11.0/docs/install/iam_policy.json
 ```
+Note: If above command fails due to curl, use below power shell commad:
+```
+Invoke-WebRequest -Uri https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/v2.11.0/docs/install/iam_policy.json -OutFile iam_policy.json
+```
 
 **Create IAM Policy**
 ```
